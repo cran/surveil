@@ -5,7 +5,7 @@
 \alias{plot.apc}
 \title{Methods for APC objects}
 \usage{
-\method{print}{apc}(x, digits = 1, max = 10, ...)
+\method{print}{apc}(x, digits = 1, max = 20, ...)
 
 \method{plot}{apc}(
   x,
@@ -27,7 +27,7 @@
 
 \item{max}{Maximum number of time periods (rows) to print}
 
-\item{...}{additional arguments; for the print arugment, these will be passed to \code{\link[base]{print.data.frame}}. For the plot method, these will be passed to \code{\link[ggplot2]{theme}}.}
+\item{...}{additional arguments; for the print argument, these will be passed to \code{\link[base]{print.data.frame}}. For the plot method, these will be passed to \code{\link[ggplot2]{theme}}.}
 
 \item{cumulative}{Plot cumulative percent change? Defaults to \code{cumulative = FALSE}}
 

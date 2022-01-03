@@ -39,7 +39,7 @@ For details on how any distribution is parameterized, see the Stan Language Func
 
 \subsection{LKJ prior}{
 
-The LKJ prior for correlation matrix has a single parameter, eta (eta > 0). If \code{eta=1}, then you are placing a uniform prior on any K-by-K correlation matrix. For eta > 1, there is a higher probability on the identity matrix, such that as eta increases beyond 1, you are expressing greater scepticism towards large correlations. If 0 < eta < 1, then you will be expressing scepticism towards correlations of zero and favoring non-zero correlations. See Stan documentation: \url{https://mc-stan.org/docs/2_27/functions-reference/lkj-correlation.html}.
+The LKJ prior for correlation matrix has a single parameter, eta (eta > 0). If \code{eta=1}, then you are placing a uniform prior on any K-by-K correlation matrix. For eta > 1, there is a higher probability on the identity matrix, such that as eta increases beyond 1, you are expressing greater skepticism towards large correlations. If 0 < eta < 1, then you will be expressing skepticism towards correlations of zero and favoring non-zero correlations. See Stan documentation: \url{https://mc-stan.org/docs/2_27/functions-reference/lkj-correlation.html}.
 }
 }
 \examples{
@@ -53,7 +53,8 @@ prior$omega <- lkj(2)
 
 \donttest{
 dfw <- msa[grep("Dallas", msa$MSA), ]
-fit <- stan_rw(dfw, time = Year, group = Race, prior = prior, iter = 1200)
+fit <- stan_rw(dfw, time = Year, group = Race, prior = prior,
+               chains = 2, iter = 900) # for speed only
 plot(fit)
 }
 

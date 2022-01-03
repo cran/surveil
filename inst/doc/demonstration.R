@@ -61,16 +61,16 @@ plot(fit, scale = 100e3, style = "lines")
 gd <- group_diff(fit, target = "Black or African American", reference = "White")
 print(gd, scale = 100e3)
 
-## ----fig.width = 3.5, fig.height = 4.5----------------------------------------
+## ----fig.width = 7, fig.height = 3--------------------------------------------
 plot(gd, scale = 100e3)
 
-## ----fig.width = 3.5, fig.height = 4.5----------------------------------------
+## ----fig.width = 7, fig.height = 3--------------------------------------------
 plot(gd, scale = 100e3, PAR = FALSE, style = "lines")
 
 ## -----------------------------------------------------------------------------
 Ts <- theil(fit)
 print(Ts)
 
-## ----fig.width = 5, fig.height = 3--------------------------------------------
+## ----fig.width = 4, fig.height = 3--------------------------------------------
 plot(Ts)
 
