@@ -268,15 +268,15 @@ plot.apc <- function(x,
             geom_hline(yintercept = 0) +
             labs(y = ylab,
                  x = NULL) +
-            theme_classic(base_size = base_size) +
-            theme(...)
+            theme_surveil(base_size = base_size, ...) 
         if (length(unique(s_df$group)) > 1) {
             gg <- gg +
                 facet_wrap(~ .data$group )
         }
         return (gg)
     }
-    if (length(unique(x$apc$group)) > 1) {
+    multi_group <- as.logical( length(unique(x$apc$group)) > 1 )    
+    if (multi_group) {
         x$apc$group <- factor(x$apc$group, levels = unique(x$apc$group), ordered = TRUE)
         x$cpc$group <- factor(x$cpc$group, levels = unique(x$cpc$group), ordered = TRUE)
     }
@@ -304,11 +304,11 @@ plot.apc <- function(x,
         geom_ribbon(alpha = alpha,
                     fill = fill) +    
         geom_line(col = col,
-                  lwd = lwd) +
-        theme_classic(base_size = base_size)
-    if (length(unique(x$apc$group)) > 1) {
+                  lwd = lwd) 
+    if (multi_group) {
         gg <- gg + facet_wrap(~ .data$group)
     }    
-    gg +
-        theme(...)
+    gg <- gg +
+        theme_surveil(base_size = base_size, ...)
+    return (gg)
 }

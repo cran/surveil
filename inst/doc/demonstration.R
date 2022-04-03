@@ -10,13 +10,14 @@ knitr::opts_chunk$set(
 )
 
 ## ----message=FALSE, warning=FALSE, eval=T-------------------------------------
-## packages required for the analysis
 library(surveil)
 library(dplyr)
 library(ggplot2)
-theme_set(theme_classic())
-## for the vignette
 library(knitr)
+
+## ----eval = FALSE-------------------------------------------------------------
+#   # here the code is displayed only, not run; for package development reasons
+#  options(mc.cores = parallel::detectCores())
 
 ## ----eval=T-------------------------------------------------------------------
 head(msa) %>%
@@ -35,7 +36,13 @@ head(tx.msa) %>%
         caption = "Glimpse of aggregated Texas metropolitan CRC cases, by race and year")
 
 ## -----------------------------------------------------------------------------
-fit <- stan_rw(tx.msa, time = Year, group = Race)
+fit <- stan_rw(tx.msa,
+               time = Year,
+	       group = Race,
+	       iter = 1500,
+	       chains = 2  #, for speed only; use default chains=4
+	       # cores = 4 # for multi-core processing
+               )
 
 ## -----------------------------------------------------------------------------
 samples <- fit$samples
@@ -47,15 +54,18 @@ rstan::stan_mcse(samples)
 ## ----fig.width = 4, fig.height = 3.5------------------------------------------
 rstan::stan_rhat(samples)
 
-## ----fig.width = 4, fig.height = 3.5------------------------------------------
-plot(fit, scale = 100e3)
+## ----fig.width = 4.5, fig.height = 3.5----------------------------------------
+plot(fit, scale = 100e3, base_size = 11)
 
-## ----fig.width = 4, fig.height = 3.5------------------------------------------
-fig <- plot(fit, scale = 100e3)
-fig + theme_bw() + theme(legend.position = "bottom")
+## ----fig.width = 7, fig.height = 3.5------------------------------------------
+fig <- plot(fit, scale = 100e3, base_size = 11, size = 0)
+fig +
+  theme(legend.position = "right") +
+  labs(title = "CRC incidence per 100,000",
+       subtitle = "Texas MSAs, 50-79 y.o.")
 
-## ----fig.width = 4, fig.height = 3.5------------------------------------------
-plot(fit, scale = 100e3, style = "lines")
+## ----fig.width = 4.5, fig.height = 3.5----------------------------------------
+plot(fit, scale = 100e3, base_size = 11, style = "lines")
 
 ## -----------------------------------------------------------------------------
 gd <- group_diff(fit, target = "Black or African American", reference = "White")

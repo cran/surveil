@@ -1,7 +1,9 @@
 #' Methods for fitted `surveil` models
 #'
 #' @description Print and plot methods for `surveil` model results
-#' @return The plot method returns a `ggplot` object; the print method returns nothing but prints a summary of results to the R console.
+#' 
+#' @return The plot method returns a `ggplot` object; the print method returns nothing but prints a summary of results to the R console. If `x` is a list of `stand_surveil` objects, the plotted lines will be labeled using the names returned by `names(x)`; if elements of the list are not named, plotted lines will simply be numbered.
+#' 
 #' @seealso \code{\link[surveil]{stan_rw}}
 #' @author Connor Donegan (Connor.Donegan@UTSouthwestern.edu)
 #' @examples
@@ -23,18 +25,19 @@
 #' plot(fit) + theme_bw()
 #' }
 #' 
-#' @param x A fitted `surveil` model
+#' @param x A fitted `surveil` model, or a list of `stand_surveil` objects (as produced by \code{\link[surveil]{standardize}}). 
 #' @param base_size Passed to `theme_classic()` to control size of plot components (text).
 #' @param scale Scale the rates by this amount; e.g., `scale = 100e3` will print rates per 100,000 at risk.
 #' @param style If `style = "mean_qi"`, then the posterior mean and 95 percent credible interval will be plotted; if `style = "lines"`, then `M` samples from the joint probability distribution of the annual rates will be plotted.
 #' @param M If `style = "lines"`, then `M` is the number of samples from the posterior distribution that will be plotted; the default is `M = 250`.
 #' @param facet If \code{facet = TRUE}, \code{\link[ggplot2]{facet_wrap}} will be used instead of differentiating by line color.
+#' @param facet_scales When \code{facet = TRUE}, this argument controls behavior of the scales for each sub-plot. See the `scales` argument to \code{\link[ggplot2]{facet_wrap}}.
 #' @param ncol Number of columns for the plotting device; optional and only used if `facet = TRUE`. If `ncol = 1`, the three plots will be aligned vertically in one column; if `ncol = 3` they will b aligned horizontally in one row. Defaults to `ncol = NULL` to allow \code{\link[ggplot2]{facet_wrap}} to automatically determine the number of columns.
 #' @param palette For multiple groups, choose the color palette. For a list of options, see \code{\link[ggplot2]{scale_color_brewer}}. The default is `palette = "Dark2"`. Not used if `facet = TRUE`.
 #' 
 #' @param alpha Numeric value from zero to one. When `style = "lines"`,  this controls transparency of lines; passed to \code{\link[ggplot2]{geom_line}}. For `style = "mean_qi", this controls the transparency of the shaded credible interval; passed to \code{\link[ggplot2]{geom_ribbon}}.
 #' @param lwd Numeric value indicating linewidth. Passed to \code{\link[ggplot2]{geom_line}}
-#' @param fill Color for the shaded credible intervalsl; only used when `style = "mean_qi"`.
+#' @param fill Color for the shaded credible intervals; only used when `style = "mean_qi"`.
 #' @param size Positive numeric value. For `style = "mean_qi"`, this controls the size of the points representing crude rates. To exclude these points from the plot altogether, use `size = 0`.
 #' @param ... For the plot method, additional arguments will be passed to `\code{\link[ggplot2]{theme}}; for the print method, additional arguments will be passed to \code{\link[base]{print.data.frame}}.
 #' 
@@ -69,6 +72,7 @@ plot.surveil <- function(x,
                          scale = 1,
                          style = c("mean_qi", "lines"),
                          facet = FALSE,
+                         facet_scales = c("fixed", "free"),
                          ncol = NULL,
                          base_size = 14,
                          palette = "Dark2",
@@ -80,10 +84,32 @@ plot.surveil <- function(x,
                          ...) {
     stopifnot(is.logical(facet))    
     style <- match.arg(style, c("mean_qi", "lines"))
+    facet_scales <- match.arg(facet_scales, c("fixed", "free"))    
     if (missing(lwd)) lwd <- ifelse(style == "mean_qi", 1, 0.05)
     if (missing(alpha)) alpha <- ifelse(style == "mean_qi", 0.5, 0.7)
-    if (style == "lines") return(plot_lines(x, scale, facet, ncol, base_size, palette, M, alpha, lwd, ...))
-    if (style == "mean_qi") return(plot_mean_qi(x, scale, facet, ncol, base_size, palette, alpha, lwd, fill, size, ...))
+    if (style == "lines") return(plot_lines(x=x,
+                                            scale=scale,
+                                            facet=facet,
+                                            ncol=ncol,                                            
+                                            facet_scales=facet_scales,
+                                            base_size=base_size,
+                                            palette=palette,
+                                            M=M,
+                                            alpha=alpha,
+                                            lwd=lwd,
+                                            ...))
+    if (style == "mean_qi") return(plot_mean_qi(x=x,
+                                                scale=scale,
+                                                facet=facet,
+                                                ncol=ncol,                                                
+                                                facet_scales=facet_scales,                                                
+                                                base_size=base_size,
+                                                palette=palette,
+                                                alpha=alpha,
+                                                lwd=lwd,
+                                                fill=fill,
+                                                size=size,
+                                                ...))
 }
 
 #' @import ggplot2
@@ -93,6 +119,7 @@ plot_mean_qi <- function(x,
                          scale,
                          facet,
                          ncol,
+                         facet_scales,                         
                          base_size,
                          palette,
                          alpha,
@@ -107,15 +134,14 @@ plot_mean_qi <- function(x,
         x$summary <- dplyr::mutate(x$summary,
                                    group = factor({{ group }}, levels = unique({{ group }}), ordered = TRUE))
         if (facet) {
-            gform <- stats::as.formula(paste0("~ ", x$group$group))
                 gg <- ggplot(x$summary) +
-                    facet_wrap(gform,
-                               scales = "fixed",
+                    facet_wrap(~ group, #gform,
+                               scales = facet_scales,
                                ncol = ncol)
             } else {            
                 gg <- ggplot(x$summary,
-                             aes(group = {{ group }},
-                                 col = {{ group }} )
+                             aes(group = group, 
+                                 col = group)   
                              )
                 if (length(x$group$group.df$group.index) > 8) {
                     warning("You have too many groups to use scale_color_brewer palettes; you may want to use facet = TRUE")
@@ -142,9 +168,7 @@ plot_mean_qi <- function(x,
                   lwd = lwd) +
         labs(x = NULL,
              y = NULL) +
-        theme_classic(base_size = base_size) +
-        theme(legend.position = "bottom",
-              ...)
+        theme_surveil(base_size = base_size, ...)
     if (size) {
         gg <- gg +
             geom_point(aes(.data$time, scale * .data$Crude),
@@ -165,7 +189,8 @@ plot_mean_qi <- function(x,
 plot_lines <- function(x,
                        scale,
                        facet,
-                       ncol,                       
+                       ncol,
+                       facet_scales,                       
                        base_size,
                        palette,
                        M,
@@ -207,8 +232,7 @@ plot_lines <- function(x,
             geom_line(alpha = alpha, lwd = lwd) +
             labs(y = NULL,
                  x = NULL) +
-            theme_classic() +
-            theme(...)
+            theme_surveil(base_size = base_size, ...)
         return (gg)
     }        
     s_df <- dplyr::left_join(s_df, x$group$group.df, by = "group.index")
@@ -221,11 +245,10 @@ plot_lines <- function(x,
                       lwd = lwd) +
             labs(x = NULL,
                  y = NULL) +
-            theme_classic() +
-            theme(...) +
             facet_wrap(~ group.label,
-                       scales = "fixed",
-                       ncol = ncol)
+                       scales = facet_scales,
+                       ncol = ncol) +
+            theme_surveil(base_size = base_size, ...)             
         return(gg)
     }        
     gg <- ggplot(s_df, aes(.data$time.label, .data$rate,
@@ -235,10 +258,8 @@ plot_lines <- function(x,
                   lwd = lwd) +
         labs(x = NULL,
              y = NULL) +
-        theme_classic() +
         guides(color = guide_legend(override.aes = list(size = 2))) +
-        theme(legend.position = "bottom",
-              ...)
+        theme_surveil(base_size = base_size, ...) 
     if (K < 8) {
         gg <- gg +
             scale_color_brewer(palette = palette,
@@ -250,14 +271,142 @@ plot_lines <- function(x,
 }
 
 
-#' Standardized rates
+#' @importFrom dplyr bind_rows left_join filter
+#' @importFrom scales comma
+#' @import ggplot2
+#' @import graphics
+#' @rdname plot.surveil
+#' @method plot list
+#' @export
+plot.list <- function(x,
+                      scale = 1,
+                      style = c("mean_qi", "lines"),
+                      facet = FALSE,
+                      ncol,
+                      facet_scales = c("fixed", "free"),
+                      M = 250,
+                      base_size = 14,
+                      palette = "Dark2",
+                      fill = 'gray80',
+                      size = 1.5,
+                      alpha,
+                      lwd,
+                      ...) { 
+    stopifnot( all(unlist(lapply(x, inherits, "stand_surveil"))) )
+    stopifnot(is.logical(facet))     
+    style <- match.arg(style, c("mean_qi", "lines"))
+    facet_scales <- match.arg(facet_scales, c("fixed", "free"))
+    if (missing(ncol)) ncol <- length(x)
+    if (missing(lwd)) lwd <- ifelse(style == "mean_qi", 1, 0.05)
+    if (missing(alpha)) alpha <- ifelse(style == "mean_qi", 0.5, 0.7)
+    if (scale != 1) message("Plotted rates are per ", scales::comma(scale)) 
+    if (style == "mean_qi") { 
+        x2 <- lapply(x, function(x) x$standard_summary)
+        df <- dplyr::bind_rows(x2, .id = "Group")
+        time.df <- x[[1]]$time$time.df
+        time.df$time_index <- time.df$time.index
+        df <- dplyr::left_join(df, time.df, by = "time_index")
+        if (facet) {
+            gg <- ggplot(df) +
+                facet_wrap(~ .data$Group,
+                           scales = facet_scales,
+                           ncol = ncol)            
+        } else {            
+                gg <- ggplot(df,
+                             aes(group = .data$Group,
+                                 col = .data$Group )
+                             )
+                if (length(unique(df$Group)) > 8) {
+                    warning("You have too many groups to use scale_color_brewer palettes; you may want to use facet = TRUE")
+                } else {
+                    gg <- gg +
+                        scale_color_brewer(
+                            palette = palette,
+                            name = NULL
+                        )
+                }
+        }    
+        if (scale != 1) message("Plotted rates are per ", scales::comma(scale))
+        gg <- gg +
+            geom_ribbon(aes(.data$time_label,
+                            ymin = scale * .data$.lower,
+                            ymax = scale * .data$.upper
+                            ),
+                        alpha = alpha,
+                        fill = fill,
+                        lwd = 0
+                    ) +
+            geom_line(aes(.data$time_label,
+                          scale * .data$stand_rate),
+                      lwd = lwd) +
+            labs(x = NULL,
+                 y = NULL) +
+            theme_surveil(base_size = base_size, ...)
+    return (gg)
+}
+        x2 <- lapply(x, function(l) dplyr::filter(l$standard_samples, .data$.draw <= M))        
+        df <- dplyr::bind_rows(x2, .id = "Group")
+        df$Group <- factor(df$Group, ordered = TRUE, levels = names(x))
+        if (facet) {
+            gg <- ggplot(df, aes(x = .data$time_label,
+                                 y = scale * .data$stand_rate,
+                                 group = factor(paste(.data$.draw, .data$Group))
+                                 )
+                         ) +
+                geom_line(alpha = alpha,
+                          lwd = lwd
+                          ) +
+                labs(x = NULL,
+                     y = NULL) +
+                facet_wrap(~ .data$Group,
+                           scales = facet_scales,
+                           ncol = ncol
+                           ) +                 
+                theme_surveil(base_size = base_size, ...)
+            return (gg)
+        }
+        gg <- ggplot(df, aes(x = .data$time_label,
+                       y = scale * .data$stand_rate,
+                       group = factor(paste(.data$.draw, .data$Group))
+                       )
+                     ) +
+            geom_line(aes(col = .data$Group),
+                      alpha = alpha,
+                      lwd = lwd) +
+            labs(x = NULL,
+                 y = NULL) +
+            guides(color = guide_legend(override.aes = list(size = 2))) +
+            theme_surveil(base_size = base_size, ...)            
+    K <- length(unique(df$Group))
+    if (K < 8) {
+        gg <- gg +
+            scale_color_brewer(palette = palette,
+                               name = NULL)
+    } else {
+        warning("You have too many groups to use scale_color_brewer palettes; you may want to use facet = TRUE")
+    }    
+    return (gg)
+}
+
+
+#' Age-standardized rates
 #' @description Convert `surveil` model results to age standardized rates using a fixed age distribution
 #'
 #' @param x A fitted `surveil` model
 #' @param label Labels (character strings) for the age groups that correspond to the values of `stand_pop`. The labels must match the grouping variable used to fit the model (i.e., `all(label %in% names(x$data$cases))` must be true).
 #' @param standard_pop Standard population values corresponding to the age groups specified by `label`
 #'
-#' @return A list, also of class "stand_surveil", containing a summary data frame (mean and 95 percent credible intervals) (named `summary`), a data frame of MCMC samples of standardized rates per time period (named `samples`), and the user-provided labels and standard population sizes (named `label` and `standard_pop`). In addition, all of the items from the user-provided `surveil` model are automatically appended to the list.
+#' @return A list, also of class "stand_surveil", containing the entire contents of the user-provided `surveil` model plus the following:
+#' \describe{
+#'  \item{standard_summary}{summary data frame of standardized rates (means and 95 percent credible intervals)}
+#'
+#' \item{standard_samples}{a data frame of Markov chain Monte Carlo (MCMC) samples from the posterior probability distribution for the standardized rates}
+#'
+#' \item{standard_label}{user-provided age-group labels}
+#'
+#' \item{standard_pop}{user-provided standardized population sizes (ordered as `standard_label`)}
+#' }
+#'
 #' 
 #' @examples
 #' data(cancer)
@@ -279,7 +428,7 @@ plot_lines <- function(x,
 #' print(stands)
 #' plot(stands, style = "lines")
 #' }
-#' @seealso \code{\link[surveil]{stan_rw}}  \code{\link[surveil]{plot.stand_surveil}} \code{\link[surveil]{print.stand_surveil}} 
+#' @seealso \code{vignette("age-standardization", package = "surveil")} \code{\link[surveil]{stan_rw}}  \code{\link[surveil]{plot.stand_surveil}} \code{\link[surveil]{print.stand_surveil}} 
 #' @md
 #' @export
 #' @importFrom dplyr `%>%` left_join select group_by summarise
@@ -297,6 +446,7 @@ standardize <- function(x, label, standard_pop) {
     time_labels <- x$time$time.df$time.label
     time_df <- data.frame(time_index = 1:length(time_labels), time_label = time_labels)
     # samples of standardized rates
+    suppressMessages(
     stand_samples <- x$samples %>%
         tidybayes::gather_draws(rate[group_index, time_index]) %>%
         dplyr::select(.data$group_index, .data$time_index, .data$.draw, .data$.value) %>%
@@ -304,6 +454,7 @@ standardize <- function(x, label, standard_pop) {
         dplyr::group_by(.data$.draw, .data$time_index) %>%
         dplyr::summarise(stand_rate = standardize_rate(.data$.value, .data$standard_pop)) %>%
         dplyr::left_join(time_df, by ="time_index")
+    )
     # summary of marginal posterior distributions
     stand_summary <- stand_samples %>%
         dplyr::group_by(.data$time_index) %>%
@@ -320,7 +471,7 @@ standardize <- function(x, label, standard_pop) {
 
 standardize_rate <- function(rate, stand_pop) sum(rate * stand_pop) / sum(stand_pop)
 
-#' Methods for standardized rates
+#' Methods for age-standardized rates
 #'
 #' @description Print and plot methods for `stand_surveil` (standardized rates obtained from a fitted `surveil` model)
 #'
@@ -415,8 +566,7 @@ plot.stand_surveil <- function(x,
                       col = col) +
             labs(x = NULL,
                  y = NULL) +
-            theme_classic(base_size = base_size) +
-            theme(...)
+            theme_surveil(base_size = base_size, ...)            
         return (gg)
     }
     if (style == "lines") {
@@ -424,8 +574,7 @@ plot.stand_surveil <- function(x,
         df <- dplyr::filter(df, .data$.draw <= M)
         TT <- max(df$time_index)        
         df$draw <- rep(1:M, each = TT)
-        df$stand_rate * scale
-        gg <- ggplot(df, aes(.data$time_label, .data$stand_rate,
+        gg <- ggplot(df, aes(.data$time_label, scale * .data$stand_rate,
                              group = factor(.data$draw))
                      ) +
             geom_line(col = col,
@@ -433,8 +582,7 @@ plot.stand_surveil <- function(x,
                       lwd = lwd) +
             labs(x = NULL,
                  y = NULL) +
-            theme_classic() +
-            theme(...)
+            theme_surveil(base_size = base_size, ...)
         return (gg)
     }
 }
