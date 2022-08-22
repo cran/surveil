@@ -27,34 +27,11 @@ head(cancer)
 print(standard)
 
 ## -----------------------------------------------------------------------------
-standard$Age <- standard$age # make sure names match for the merge
-cancer_2 <- merge(cancer, standard, by = "Age")  # properly join data together
-cancer_2$crude_rate <- cancer_2$Count / cancer_2$Population  # r_i
-cancer_2$crude_reweighted <- cancer_2$crude_rate * cancer_2$standard_pop  # r_i * w_i
-
-## -----------------------------------------------------------------------------
-M <- sum(standard$standard_pop) # sum(w_i)
-M
-
-## -----------------------------------------------------------------------------
-c2_1999 <- cancer_2[grep(1999, cancer_2$Year),]
-100e3 * sum(c2_1999$crude_reweighted) / M  # 100,000 * sum(r_i * w_i) / sum(w_i)
-
-## -----------------------------------------------------------------------------
-crude_sr <- aggregate(crude_reweighted ~ Year, data = cancer_2, sum) 
-crude_sr$SR <- 100e3 * crude_sr$crude_reweighted / M
-print(crude_sr)
-
-## ----fig.height = 5, fig.width = 6--------------------------------------------
-plot(crude_sr$Year, crude_sr$SR, type = "l", xlab = "", ylab = 'SR')
-
-## -----------------------------------------------------------------------------
 fit <- stan_rw(cancer,
                time = Year,
-	       group = Age, 
+	       group = Age,
 	       iter = 1500,
-	       chains = 2  #, for speed only; use default chains=4
-	       # cores = 4 # for multi-core processing
+	       chains = 2  #, for speed only; use default chains=4	       
 	       )
 
 ## ----fig.height = 4.5, fig.width = 6.5----------------------------------------
@@ -69,7 +46,6 @@ plot(fit,
 ## ----fig.height = 4.5, fig.width = 6.5----------------------------------------
 fit_apc <- apc(fit)
 plot(fit_apc, 
-     style = "lines",
      base_size = 10,
      cum = TRUE)
 

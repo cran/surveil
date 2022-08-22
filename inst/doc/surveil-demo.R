@@ -15,10 +15,6 @@ library(dplyr)
 library(ggplot2)
 library(knitr)
 
-## ----eval = FALSE-------------------------------------------------------------
-#   # here the code is displayed only, not run; for package development reasons
-#  options(mc.cores = parallel::detectCores())
-
 ## ----eval=T-------------------------------------------------------------------
 head(msa) %>%
   kable(booktabs = TRUE, 
@@ -41,18 +37,10 @@ fit <- stan_rw(tx.msa,
 	       group = Race,
 	       iter = 1500,
 	       chains = 2  #, for speed only; use default chains=4
-	       # cores = 4 # for multi-core processing
                )
 
-## -----------------------------------------------------------------------------
-samples <- fit$samples
-class(samples)
-
-## ----fig.width = 4, fig.height = 3.5------------------------------------------
-rstan::stan_mcse(samples)
-
-## ----fig.width = 4, fig.height = 3.5------------------------------------------
-rstan::stan_rhat(samples)
+## ----fig.width = 4.5, fig.height = 3.5----------------------------------------
+rstan::stan_rhat(fit$samples)
 
 ## ----fig.width = 4.5, fig.height = 3.5----------------------------------------
 plot(fit, scale = 100e3, base_size = 11)
@@ -68,14 +56,20 @@ fig +
 plot(fit, scale = 100e3, base_size = 11, style = "lines")
 
 ## -----------------------------------------------------------------------------
+print(fit, scale = 100e3)
+
+## -----------------------------------------------------------------------------
+head(fit$summary)
+
+## -----------------------------------------------------------------------------
 gd <- group_diff(fit, target = "Black or African American", reference = "White")
 print(gd, scale = 100e3)
 
-## ----fig.width = 7, fig.height = 3--------------------------------------------
+## ----fig.width = 7, fig.height = 2.5------------------------------------------
 plot(gd, scale = 100e3)
 
-## ----fig.width = 7, fig.height = 3--------------------------------------------
-plot(gd, scale = 100e3, PAR = FALSE, style = "lines")
+## ----fig.width = 7, fig.height = 2.5------------------------------------------
+plot(gd, scale = 100e3, PAR = FALSE)
 
 ## -----------------------------------------------------------------------------
 Ts <- theil(fit)
