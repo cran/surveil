@@ -19,20 +19,14 @@ data(standard)
 print(standard)
 
 ## -----------------------------------------------------------------------------
-cancer <- cancer[grep("40-44|45-49|50-54|55-59|60-64", cancer$Age),]
-standard <- standard[10:14,]
-head(cancer)
+cancer2 <- subset(cancer, grepl("50-54|55-59|60-64|65-69", Age))
+head(cancer2)
 
 ## -----------------------------------------------------------------------------
-print(standard)
-
-## -----------------------------------------------------------------------------
-fit <- stan_rw(cancer,
-               time = Year,
-	       group = Age,
-	       iter = 1500,
-	       chains = 2  #, for speed only; use default chains=4	       
-	       )
+fit <- stan_rw(cancer2, time = Year, group = Age,
+               refresh = 0,# silences some printing	       
+               iter = 2e3,
+               chains = 2) # for demo speed only. Use the default chains = 4
 
 ## ----fig.height = 4.5, fig.width = 6.5----------------------------------------
 plot(fit, 
@@ -59,41 +53,14 @@ fit_sr <- standardize(fit,
 library(ggplot2)
 plot(fit_sr, scale = 100e3, base_size = 10) + 
   labs(title = "US age-standardized cancer incidence per 100,000",
-  subtitle = "Ages 40-64")
+  subtitle = "Ages 50-69")
 
 ## -----------------------------------------------------------------------------
-print(fit_sr)
+print(fit_sr, scale = 100e3)
 
 ## -----------------------------------------------------------------------------
-cancer_a <- cancer 
-cancer_b <- cancer
-## set the case count equal to 0.75 times that of group A
-cancer_b$Count <- round(cancer_a$Count * 0.75) +  
-  rpois(n = nrow(cancer), lambda = cancer_a$Count * 0.1) # adds a little noise to the data
-## set the population at risk to 0.6 times that of group A
-cancer_b$Population <- round(cancer_a$Population * 0.6) + 
-  rpois(n = nrow(cancer), lambda = cancer_a$Population * 0.1)
+fit_sr_pc <- apc(fit_sr)
 
 ## -----------------------------------------------------------------------------
-fit_b <- stan_rw(cancer_b, time = Year, group = Age, 
-                 refresh = 0, # silences some printing
-		 iter = 1500,
-	         chains = 2  # for speed only; use default chains=4
-	         # cores = 4 # for multi-core processing
-		 )
-
-## -----------------------------------------------------------------------------
-fit_sr_b <- standardize(fit_b,
-                        label = standard$age,
-                        standard_pop = standard$standard_pop)
-
-## -----------------------------------------------------------------------------
-fit_sr_list <- list(B = fit_sr_b, A = fit_sr)
-ineq <- group_diff(fit_sr_list)
-
-## ----fig.width = 7, fig.height = 2.5------------------------------------------
-plot(ineq, base_size = 10)
-
-## -----------------------------------------------------------------------------
-print(ineq)
+plot(fit_sr_pc, cum = TRUE)
 

@@ -11,39 +11,33 @@ knitr::opts_chunk$set(
 
 ## ----message=FALSE, warning=FALSE, eval=T-------------------------------------
 library(surveil)
-library(dplyr)
 library(ggplot2)
 library(knitr)
 
 ## ----eval=T-------------------------------------------------------------------
-head(msa) %>%
+head(msa) |>
   kable(booktabs = TRUE, 
         caption = "Glimpse of colorectal cancer incidence data (CDC Wonder)") 
 
 ## ----message = FALSE, warn = FALSE, eval = T----------------------------------
-tx.msa <- msa %>%
-  group_by(Year, Race) %>%
-  summarise(Count = sum(Count),
-            Population = sum(Population))
+msa2 <- aggregate(cbind(Count, Population) ~ Year + Race, data = msa, FUN = sum)
 
 ## ----eval = T-----------------------------------------------------------------
-head(tx.msa) %>%
+head(msa2) |>
   kable(booktabs = TRUE, 
         caption = "Glimpse of aggregated Texas metropolitan CRC cases, by race and year")
 
 ## -----------------------------------------------------------------------------
-fit <- stan_rw(tx.msa,
-               time = Year,
-	       group = Race,
-	       iter = 1500,
-	       chains = 2  #, for speed only; use default chains=4
-               )
+fit <- stan_rw(msa2, time = Year, group = Race, iter = 1e3)
 
-## ----fig.width = 4.5, fig.height = 3.5----------------------------------------
-rstan::stan_rhat(fit$samples)
+## -----------------------------------------------------------------------------
+print(fit, scale = 100e3)
 
-## ----fig.width = 4.5, fig.height = 3.5----------------------------------------
-plot(fit, scale = 100e3, base_size = 11)
+## -----------------------------------------------------------------------------
+head(fit$summary)
+
+## ----fig.width = 4.75, fig.height = 3.5---------------------------------------
+plot(fit, scale = 100e3)
 
 ## ----fig.width = 7, fig.height = 3.5------------------------------------------
 fig <- plot(fit, scale = 100e3, base_size = 11, size = 0)
@@ -56,25 +50,17 @@ fig +
 plot(fit, scale = 100e3, base_size = 11, style = "lines")
 
 ## -----------------------------------------------------------------------------
-print(fit, scale = 100e3)
+fit_pc <- apc(fit)
 
 ## -----------------------------------------------------------------------------
-head(fit$summary)
+head(fit_pc$apc)
 
 ## -----------------------------------------------------------------------------
-gd <- group_diff(fit, target = "Black or African American", reference = "White")
-print(gd, scale = 100e3)
+head(fit_pc$cpc)
 
-## ----fig.width = 7, fig.height = 2.5------------------------------------------
-plot(gd, scale = 100e3)
+## ----fig.width = 7, fig.height = 3.5------------------------------------------
+plot(fit_pc, cumulative = TRUE)
 
-## ----fig.width = 7, fig.height = 2.5------------------------------------------
-plot(gd, scale = 100e3, PAR = FALSE)
-
-## -----------------------------------------------------------------------------
-Ts <- theil(fit)
-print(Ts)
-
-## ----fig.width = 4, fig.height = 3--------------------------------------------
-plot(Ts)
+## ----eval = FALSE-------------------------------------------------------------
+#  fit <- stan_rw(msa2, time = Year, group = Race, cor = TRUE)
 

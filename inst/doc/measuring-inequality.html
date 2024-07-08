@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+
+
+<title>Measuring health inequality</title>
+
+<script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
+// be compatible with the behavior of Pandoc < 2.8).
+document.addEventListener('DOMContentLoaded', function(e) {
+  var hs = document.querySelectorAll("div.section[class*='level'] > :first-child");
+  var i, h, a;
+  for (i = 0; i < hs.length; i++) {
+    h = hs[i];
+    if (!/^h[1-6]$/i.test(h.tagName)) continue;  // it should be a header h1-h6
+    a = h.attributes;
+    while (a.length > 0) h.removeAttribute(a[0].name);
+  }
+});
+</script>
+<script>// Hide empty <a> tag within highlighted CodeBlock for screen reader accessibility (see https://github.com/jgm/pandoc/issues/6352#issuecomment-626106786) -->
+// v0.0.1
+// Written by JooYoung Seo (jooyoung@psu.edu) and Atsushi Yasumoto on June 1st, 2020.
+
+document.addEventListener('DOMContentLoaded', function() {
+  const codeList = document.getElementsByClassName("sourceCode");
+  for (var i = 0; i < codeList.length; i++) {
+    var linkList = codeList[i].getElementsByTagName('a');
+    for (var j = 0; j < linkList.length; j++) {
+      if (linkList[j].innerHTML === "") {
+        linkList[j].setAttribute('aria-hidden', 'true');
+      }
+    }
+  }
+});
+</script>
+
+<style type="text/css">
+  code{white-space: pre-wrap;}
+  span.smallcaps{font-variant: small-caps;}
+  span.underline{text-decoration: underline;}
+  div.column{display: inline-block; vertical-align: top; width: 50%;}
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  ul.task-list{list-style: none;}
+    </style>
+
+
+
+<style type="text/css">
+  code {
+    white-space: pre;
+  }
+  .sourceCode {
+    overflow: visible;
+  }
+</style>
+<style type="text/css" data-origin="pandoc">
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #7d9029; } /* Attribute */
+code span.bn { color: #40a070; } /* BaseN */
+code span.bu { } /* BuiltIn */
+code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4070a0; } /* Char */
+code span.cn { color: #880000; } /* Constant */
+code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code span.dt { color: #902000; } /* DataType */
+code span.dv { color: #40a070; } /* DecVal */
+code span.er { color: #ff0000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #40a070; } /* Float */
+code span.fu { color: #06287e; } /* Function */
+code span.im { } /* Import */
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code span.op { color: #666666; } /* Operator */
+code span.ot { color: #007020; } /* Other */
+code span.pp { color: #bc7a00; } /* Preprocessor */
+code span.sc { color: #4070a0; } /* SpecialChar */
+code span.ss { color: #bb6688; } /* SpecialString */
+code span.st { color: #4070a0; } /* String */
+code span.va { color: #19177c; } /* Variable */
+code span.vs { color: #4070a0; } /* VerbatimString */
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+
+</style>
+<script>
+// apply pandoc div.sourceCode style to pre.sourceCode instead
+(function() {
+  var sheets = document.styleSheets;
+  for (var i = 0; i < sheets.length; i++) {
+    if (sheets[i].ownerNode.dataset["origin"] !== "pandoc") continue;
+    try { var rules = sheets[i].cssRules; } catch (e) { continue; }
+    var j = 0;
+    while (j < rules.length) {
+      var rule = rules[j];
+      // check if there is a div.sourceCode rule
+      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") {
+        j++;
+        continue;
+      }
+      var style = rule.style.cssText;
+      // check if color or background-color is set
+      if (rule.style.color === '' && rule.style.backgroundColor === '') {
+        j++;
+        continue;
+      }
+      // replace div.sourceCode by a pre.sourceCode rule
+      sheets[i].deleteRule(j);
+      sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
+    }
+  }
+})();
+</script>
+
+
+
+
+<style type="text/css">body {
+background-color: #fff;
+margin: 1em auto;
+max-width: 700px;
+overflow: visible;
+padding-left: 2em;
+padding-right: 2em;
+font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+font-size: 14px;
+line-height: 1.35;
+}
+#TOC {
+clear: both;
+margin: 0 0 10px 10px;
+padding: 4px;
+width: 400px;
+border: 1px solid #CCCCCC;
+border-radius: 5px;
+background-color: #f6f6f6;
+font-size: 13px;
+line-height: 1.3;
+}
+#TOC .toctitle {
+font-weight: bold;
+font-size: 15px;
+margin-left: 5px;
+}
+#TOC ul {
+padding-left: 40px;
+margin-left: -1.5em;
+margin-top: 5px;
+margin-bottom: 5px;
+}
+#TOC ul ul {
+margin-left: -2em;
+}
+#TOC li {
+line-height: 16px;
+}
+table {
+margin: 1em auto;
+border-width: 1px;
+border-color: #DDDDDD;
+border-style: outset;
+border-collapse: collapse;
+}
+table th {
+border-width: 2px;
+padding: 5px;
+border-style: inset;
+}
+table td {
+border-width: 1px;
+border-style: inset;
+line-height: 18px;
+padding: 5px 5px;
+}
+table, table th, table td {
+border-left-style: none;
+border-right-style: none;
+}
+table thead, table tr.even {
+background-color: #f7f7f7;
+}
+p {
+margin: 0.5em 0;
+}
+blockquote {
+background-color: #f6f6f6;
+padding: 0.25em 0.75em;
+}
+hr {
+border-style: solid;
+border: none;
+border-top: 1px solid #777;
+margin: 28px 0;
+}
+dl {
+margin-left: 0;
+}
+dl dd {
+margin-bottom: 13px;
+margin-left: 13px;
+}
+dl dt {
+font-weight: bold;
+}
+ul {
+margin-top: 0;
+}
+ul li {
+list-style: circle outside;
+}
+ul ul {
+margin-bottom: 0;
+}
+pre, code {
+background-color: #f7f7f7;
+border-radius: 3px;
+color: #333;
+white-space: pre-wrap; 
+}
+pre {
+border-radius: 3px;
+margin: 5px 0px 10px 0px;
+padding: 10px;
+}
+pre:not([class]) {
+background-color: #f7f7f7;
+}
+code {
+font-family: Consolas, Monaco, 'Courier New', monospace;
+font-size: 85%;
+}
+p > code, li > code {
+padding: 2px 0px;
+}
+div.figure {
+text-align: center;
+}
+img {
+background-color: #FFFFFF;
+padding: 2px;
+border: 1px solid #DDDDDD;
+border-radius: 3px;
+border: 1px solid #CCCCCC;
+margin: 0 5px;
+}
+h1 {
+margin-top: 0;
+font-size: 35px;
+line-height: 40px;
+}
+h2 {
+border-bottom: 4px solid #f7f7f7;
+padding-top: 10px;
+padding-bottom: 2px;
+font-size: 145%;
+}
+h3 {
+border-bottom: 2px solid #f7f7f7;
+padding-top: 10px;
+font-size: 120%;
+}
+h4 {
+border-bottom: 1px solid #f7f7f7;
+margin-left: 8px;
+font-size: 105%;
+}
+h5, h6 {
+border-bottom: 1px solid #ccc;
+font-size: 105%;
+}
+a {
+color: #0033dd;
+text-decoration: none;
+}
+a:hover {
+color: #6666ff; }
+a:visited {
+color: #800080; }
+a:visited:hover {
+color: #BB00BB; }
+a[href^="http:"] {
+text-decoration: underline; }
+a[href^="https:"] {
+text-decoration: underline; }
+
+code > span.kw { color: #555; font-weight: bold; } 
+code > span.dt { color: #902000; } 
+code > span.dv { color: #40a070; } 
+code > span.bn { color: #d14; } 
+code > span.fl { color: #d14; } 
+code > span.ch { color: #d14; } 
+code > span.st { color: #d14; } 
+code > span.co { color: #888888; font-style: italic; } 
+code > span.ot { color: #007020; } 
+code > span.al { color: #ff0000; font-weight: bold; } 
+code > span.fu { color: #900; font-weight: bold; } 
+code > span.er { color: #a61717; background-color: #e3d2d2; } 
+</style>
+
+
+
+
+</head>
+
+<body>
+
+
+
+
+<h1 class="title toc-ignore">Measuring health inequality</h1>
+
+
+
+<p><em>surveil</em> provides a number of functions and methods for measuring health differences or inequalities. These can calculated using the <code>group_diff</code> function.</p>
+<p>Pairwise measures of inequality have an important purpose (tracking health inequalities between historically or currently advantaged and disadvantaged groups), but we should keep in mind the limitations inherent in tracking the progress of any group by comparing that group to a moving target (particularly one that may move in an unfavorable direction).</p>
+<div id="concepts" class="section level2">
+<h2>Concepts</h2>
+<p>The <code>group_diff</code> function returns estimates for the following quantities, where <span class="math inline">\(A\)</span> is the incidence rate for the advantaged group, <span class="math inline">\(D\)</span> is the incidence rate of the disadvantaged group, and <span class="math inline">\(P_d\)</span> is the size of the population at risk for the disadvantaged group.</p>
+<p><strong>Table 1:</strong> Group difference measures for age-stratified groups.</p>
+<table>
+<thead>
+<tr class="header">
+<th align="left">Concept</th>
+<th align="center">Formula</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">Rate Ratio (RR)</td>
+<td align="center"><span class="math inline">\(\frac{D}{A}\)</span></td>
+</tr>
+<tr class="even">
+<td align="left">Rate Difference (RD)</td>
+<td align="center"><span class="math inline">\(D - A\)</span></td>
+</tr>
+<tr class="odd">
+<td align="left">Excess Cases (EC)</td>
+<td align="center"><span class="math inline">\((D-A) \times P_d\)</span></td>
+</tr>
+<tr class="even">
+<td align="left">Proportion Attributable Risk (PAR)</td>
+<td align="center"><span class="math inline">\(\frac{D-A}{D}\)</span></td>
+</tr>
+</tbody>
+</table>
+<p>Notice that the PAR is simply the rate difference expressed as a fraction of total risk; it indicates the fraction of risk in the target population that would have been removed had the target rate been equal to the reference rate <span class="citation">(Menvielle, Kulhánová, and Machenbach <a href="#ref-menvielle_2019" role="doc-biblioref">2019</a>)</span>.</p>
+</div>
+<div id="demonstration" class="section level2">
+<h2>Demonstration</h2>
+<p>We will illustrate using the colorectal cancer data from Texas MSAs aggregated by race-ethnicity:</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true"></a><span class="kw">library</span>(surveil)</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true"></a><span class="kw">data</span>(msa)</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true"></a>msa2 &lt;-<span class="st"> </span><span class="kw">aggregate</span>(<span class="kw">cbind</span>(Count, Population) <span class="op">~</span><span class="st"> </span>Year <span class="op">+</span><span class="st"> </span>Race, <span class="dt">data =</span> msa, <span class="dt">FUN =</span> sum)</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true"></a><span class="kw">head</span>(msa2)</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true"></a><span class="co">#&gt;   Year                      Race Count Population</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true"></a><span class="co">#&gt; 1 1999 Black or African American   471     270430</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true"></a><span class="co">#&gt; 2 2000 Black or African American   455     283280</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true"></a><span class="co">#&gt; 3 2001 Black or African American   505     298287</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true"></a><span class="co">#&gt; 4 2002 Black or African American   539     313133</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true"></a><span class="co">#&gt; 5 2003 Black or African American   546     329481</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true"></a><span class="co">#&gt; 6 2004 Black or African American   602     346886</span></span></code></pre></div>
+<p>This fits the time trend models to each group:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true"></a><span class="co"># refresh = 0 will silence some printing</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true"></a>fit &lt;-<span class="st"> </span><span class="kw">stan_rw</span>(msa2, <span class="dt">time =</span> Year, <span class="dt">group =</span> Race, <span class="dt">iter =</span> <span class="fl">1e3</span>, <span class="dt">refresh =</span> <span class="dv">0</span>)</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true"></a><span class="co">#&gt; Distribution: normal</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true"></a><span class="co">#&gt; Distribution: normal</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true"></a><span class="co">#&gt; [1] &quot;Setting normal prior(s) for eta_1: &quot;</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true"></a><span class="co">#&gt;  location scale</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true"></a><span class="co">#&gt;        -6     5</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true"></a><span class="co">#&gt; [1] &quot;\nSetting half-normal prior for sigma: &quot;</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true"></a><span class="co">#&gt;  location scale</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true"></a><span class="co">#&gt;         0     1</span></span></code></pre></div>
+<p>To calculate the pairwise difference or inequality measures for two groups in our data, we call <code>group_diff</code> on our fitted model.</p>
+<p>We have to name which group is the reference and which is the target group. The group names must match the labels in the data:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true"></a><span class="kw">unique</span>(msa2<span class="op">$</span>Race)</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true"></a><span class="co">#&gt; [1] &quot;Black or African American&quot; &quot;Hispanic&quot;                 </span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true"></a><span class="co">#&gt; [3] &quot;White&quot;</span></span></code></pre></div>
+<p>In this case, we will use whites as the reference rate and African Americans as the target rate:</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true"></a>gd &lt;-<span class="st"> </span><span class="kw">group_diff</span>(fit, <span class="dt">target =</span> <span class="st">&quot;Black or African American&quot;</span>, <span class="dt">reference =</span> <span class="st">&quot;White&quot;</span>)</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true"></a><span class="kw">print</span>(gd, <span class="dt">scale =</span> <span class="fl">100e3</span>)</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true"></a><span class="co">#&gt; Summary of Pairwise Inequality</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true"></a><span class="co">#&gt; Target group: Black or African American</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true"></a><span class="co">#&gt; Reference group: White</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true"></a><span class="co">#&gt; Time periods observed: 19</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true"></a><span class="co">#&gt; Rate scale: per 100,000</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true"></a><span class="co">#&gt; Cumulative excess cases (EC): 3,207 [2982, 3436]</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true"></a><span class="co">#&gt; Cumulative EC as a fraction of group risk (PAR): 0.27 [0.25, 0.28]</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true"></a><span class="co">#&gt;  time Rate RD  PAR  RR  EC</span></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true"></a><span class="co">#&gt;  1999  170 35 0.20 1.3  94</span></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true"></a><span class="co">#&gt;  2000  166 30 0.18 1.2  85</span></span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true"></a><span class="co">#&gt;  2001  168 34 0.20 1.3 102</span></span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true"></a><span class="co">#&gt;  2002  169 39 0.23 1.3 122</span></span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true"></a><span class="co">#&gt;  2003  167 40 0.24 1.3 131</span></span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true"></a><span class="co">#&gt;  2004  167 47 0.28 1.4 162</span></span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true"></a><span class="co">#&gt;  2005  159 44 0.28 1.4 161</span></span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true"></a><span class="co">#&gt;  2006  155 45 0.29 1.4 179</span></span>
+<span id="cb4-19"><a href="#cb4-19" aria-hidden="true"></a><span class="co">#&gt;  2007  153 45 0.29 1.4 187</span></span>
+<span id="cb4-20"><a href="#cb4-20" aria-hidden="true"></a><span class="co">#&gt;  2008  150 46 0.31 1.4 204</span></span>
+<span id="cb4-21"><a href="#cb4-21" aria-hidden="true"></a><span class="co">#&gt;  2009  143 45 0.31 1.5 207</span></span>
+<span id="cb4-22"><a href="#cb4-22" aria-hidden="true"></a><span class="co">#&gt;  2010  139 43 0.31 1.4 209</span></span>
+<span id="cb4-23"><a href="#cb4-23" aria-hidden="true"></a><span class="co">#&gt;  2011  131 37 0.28 1.4 191</span></span>
+<span id="cb4-24"><a href="#cb4-24" aria-hidden="true"></a><span class="co">#&gt;  2012  125 34 0.27 1.4 184</span></span>
+<span id="cb4-25"><a href="#cb4-25" aria-hidden="true"></a><span class="co">#&gt;  2013  125 35 0.28 1.4 196</span></span>
+<span id="cb4-26"><a href="#cb4-26" aria-hidden="true"></a><span class="co">#&gt;  2014  126 35 0.28 1.4 204</span></span>
+<span id="cb4-27"><a href="#cb4-27" aria-hidden="true"></a><span class="co">#&gt;  2015  122 29 0.24 1.3 180</span></span>
+<span id="cb4-28"><a href="#cb4-28" aria-hidden="true"></a><span class="co">#&gt;  2016  122 33 0.27 1.4 209</span></span>
+<span id="cb4-29"><a href="#cb4-29" aria-hidden="true"></a><span class="co">#&gt;  2017  123 30 0.25 1.3 199</span></span></code></pre></div>
+<p>All of the <em>surveil</em> plotting and printing methods provide an option to scale rates by a custom value. By setting <code>scale = 100e3</code> (100,000), the RD is printed as cases per 100,000. None of the other inequality measures (PAR, RR, EC) are impacted by this choice.</p>
+<p>The plot method for <code>surveil_diff</code> produces one time series <code>ggplot</code> each for RD, PAR, and EC. The estimates for each measure are plotted as lines, while the shading indicates a 95% credible interval:</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true"></a><span class="kw">plot</span>(gd, <span class="dt">scale =</span> <span class="fl">100e3</span>)</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true"></a><span class="co">#&gt; Rate differences (RD) are per 100,000 at risk</span></span></code></pre></div>
+<p><img src="data:image/png;base64,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" style="display: block; margin: auto;" /></p>
+<p>(The estimates are the means of the posterior probability distributions for each quantity of interest.) If we wanted to replace the plot of the PAR with one of the rate ratio we would set the <code>PAR</code> option to <code>FALSE</code>, as in:</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true"></a><span class="co"># figure not shown</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true"></a><span class="kw">plot</span>(gd, <span class="dt">scale =</span> <span class="fl">100e3</span>, <span class="dt">PAR =</span> <span class="ot">FALSE</span>)</span></code></pre></div>
+</div>
+<div id="comparing-age-stratified-groups" class="section level2">
+<h2>Comparing age-stratified groups</h2>
+<p>The <code>group_diff</code> function can be used to obtain measures of inequality between groups with age-standardized rates. The measures of excess cases (EC) and proportion attributable risk (PAR) are adjusted to account for age-specific rates and varying sizes of populations at risk.</p>
+<p>In the following table, <span class="math inline">\(D\)</span> and <span class="math inline">\(A\)</span> refer to the age-standardized rates for the disadvantaged and advantaged populations, respectively. Age groups are indexed by <span class="math inline">\(i\)</span>, such that <span class="math inline">\(D_i\)</span> is the incidence rate in the <span class="math inline">\(i^{th}\)</span> age group for the disadvantaged population.</p>
+<p><strong>Table 2:</strong> Group difference measures for age-stratified groups.</p>
+<table>
+<colgroup>
+<col width="69%"></col>
+<col width="30%"></col>
+</colgroup>
+<thead>
+<tr class="header">
+<th align="center">Concept</th>
+<th align="center">Formula</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="center">Rate Ratio (RR)</td>
+<td align="center"><span class="math inline">\(\frac{D}{A}\)</span></td>
+</tr>
+<tr class="even">
+<td align="center">Rate Difference (RD)</td>
+<td align="center"><span class="math inline">\(D - A\)</span></td>
+</tr>
+<tr class="odd">
+<td align="center">Excess Cases (EC)</td>
+<td align="center"><span class="math inline">\(\sum_i (D_i - A_i) * P_{d,i}\)</span></td>
+</tr>
+<tr class="even">
+<td align="center">Proportion Attributable Risk (PAR)</td>
+<td align="center"><span class="math inline">\(\frac{\sum_i (D_i - A_i) * P_{d,i}}{ \sum_i D_i * P_{d,i} }\)</span></td>
+</tr>
+</tbody>
+</table>
+<p>The EC measure sums the excess cases across all age groups, and the PAR divides the EC measure by the total risk across all age groups in the disadvantaged population. For age stratified populations, the PAR may be preferred over the RR as a measure of relative inequality because the PAR reflects the actual population sizes.</p>
+<p>To compare two age-stratified population segments, you will first obtain age-standardized rates for each group separately. (See the vignette on age-standardization using <code>vignette(&quot;age-standardization&quot;)</code>.) When fitting these models, be sure to use the same MCMC parameters each time: the number of MCMC iterations and chains must match (that is, use the same <code>iter</code> and <code>chains</code> values for each model).</p>
+<p>For any two groups A and B, you might name these age-standardized models <code>fit_a</code> and <code>fit__b</code>. Next, combine them into a list. The first item in the list (A) will be used as the target group and the second (B) will be treated as the reference group:</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true"></a>fit_list &lt;-<span class="st"> </span><span class="kw">list</span>(<span class="dt">group_a =</span> fit_sr_a, <span class="dt">group_b =</span> fit_sr_b)</span></code></pre></div>
+<p>Then pass that list to <code>group_diff</code>:</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true"></a>diff &lt;-<span class="st"> </span><span class="kw">group_diff</span>(fit_list)</span></code></pre></div>
+<p>This will compare group A to group B.</p>
+</div>
+<div id="measuring-inequality-with-multiple-groups" class="section level2">
+<h2>Measuring inequality with multiple groups</h2>
+<p>Pairwise cannot provide a summary of dispersion or inequality across multiple groups. Theil’s T is an entropy-based inequality index with many favorable qualities, including that it naturally accommodates complex (nested) grouping structures <span class="citation">(Theil <a href="#ref-theil_1972" role="doc-biblioref">1972</a>; Conceição and Galbraith <a href="#ref-conceicao_2000a" role="doc-biblioref">2000</a>; Conceição and Ferreira <a href="#ref-conceicao_2000b" role="doc-biblioref">2000</a>)</span>.</p>
+<p>Theil’s T measures the extent to which groups are under- or over-burdened by disease, meaning simply that the proportion of cases accounted for by a particular group, <span class="math inline">\(\omega_j\)</span>, is lower or higher than the proportion of the population constituted by that same group, <span class="math inline">\(\eta_j\)</span>. With <span class="math inline">\(k\)</span> groups, Theil’s index is <span class="math display">\[T = \sum_{j=1}^k \omega_j \big[ log(\omega_j / \eta_j) \big].\]</span> This is zero when case shares equal population shares and it increases monotonically as the two diverge for any group. Theil’s T is thus a weighted mean of log-ratios of case shares to population shares, where each log-ratio (which we may describe as a raw inequality score) is weighted by its share of total cases.</p>
+<p>Theil’s T can be computed from a fitted <em>surveil</em> model, the only requirement is that the model includes multiple groups (through the <code>group</code> argument):</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true"></a>Ts &lt;-<span class="st"> </span><span class="kw">theil</span>(fit)</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true"></a><span class="kw">print</span>(Ts)</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true"></a><span class="co">#&gt; Summary of Theil&#39;s Inequality Index</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true"></a><span class="co">#&gt; Groups:</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true"></a><span class="co">#&gt; Time periods observed: 19</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true"></a><span class="co">#&gt; Theil&#39;s T (times 100) with 95% credible intervals</span></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true"></a><span class="co">#&gt;  time Theil .lower .upper</span></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true"></a><span class="co">#&gt;  1999 0.944  0.622  1.322</span></span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true"></a><span class="co">#&gt;  2000 0.797  0.528  1.081</span></span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true"></a><span class="co">#&gt;  2001 0.901  0.637  1.183</span></span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true"></a><span class="co">#&gt;  2002 0.978  0.697  1.301</span></span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true"></a><span class="co">#&gt;  2003 0.992  0.713  1.324</span></span>
+<span id="cb9-13"><a href="#cb9-13" aria-hidden="true"></a><span class="co">#&gt;  2004 1.070  0.764  1.444</span></span>
+<span id="cb9-14"><a href="#cb9-14" aria-hidden="true"></a><span class="co">#&gt;  2005 1.004  0.692  1.364</span></span>
+<span id="cb9-15"><a href="#cb9-15" aria-hidden="true"></a><span class="co">#&gt;  2006 1.048  0.731  1.406</span></span>
+<span id="cb9-16"><a href="#cb9-16" aria-hidden="true"></a><span class="co">#&gt;  2007 1.104  0.791  1.487</span></span>
+<span id="cb9-17"><a href="#cb9-17" aria-hidden="true"></a><span class="co">#&gt;  2008 1.247  0.900  1.667</span></span>
+<span id="cb9-18"><a href="#cb9-18" aria-hidden="true"></a><span class="co">#&gt;  2009 1.200  0.841  1.615</span></span>
+<span id="cb9-19"><a href="#cb9-19" aria-hidden="true"></a><span class="co">#&gt;  2010 1.132  0.799  1.541</span></span>
+<span id="cb9-20"><a href="#cb9-20" aria-hidden="true"></a><span class="co">#&gt;  2011 0.908  0.614  1.238</span></span>
+<span id="cb9-21"><a href="#cb9-21" aria-hidden="true"></a><span class="co">#&gt;  2012 0.765  0.488  1.098</span></span>
+<span id="cb9-22"><a href="#cb9-22" aria-hidden="true"></a><span class="co">#&gt;  2013 0.805  0.521  1.127</span></span>
+<span id="cb9-23"><a href="#cb9-23" aria-hidden="true"></a><span class="co">#&gt;  2014 0.859  0.580  1.181</span></span>
+<span id="cb9-24"><a href="#cb9-24" aria-hidden="true"></a><span class="co">#&gt;  2015 0.678  0.425  0.962</span></span>
+<span id="cb9-25"><a href="#cb9-25" aria-hidden="true"></a><span class="co">#&gt;  2016 0.804  0.513  1.112</span></span>
+<span id="cb9-26"><a href="#cb9-26" aria-hidden="true"></a><span class="co">#&gt;  2017 0.716  0.449  1.039</span></span></code></pre></div>
+<p>The results can be visualized using <code>plot</code>:</p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true"></a><span class="kw">plot</span>(Ts)</span></code></pre></div>
+<p><img src="data:image/png;base64,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" style="display: block; margin: auto;" /></p>
+<p>While the minimum of Theil’s index is always zero, the maximum value varies with the structure of the population under observation. The index is useful for comparisons such as monitoring change over time, and should generally not be used as a indication of the absolute level of inequality.</p>
+<p>The index also can be extended for groups nested in regions such as racial-ethnic groups within states. Theil’s index can provide a measure of geographic inequality across states (between-state inequality), and social inequality within states (within-state inequality) <span class="citation">(Conceição, Galbraith, and Bradford <a href="#ref-conceiccao_2001" role="doc-biblioref">2001</a>)</span>. For details, see <code>?theil</code>.</p>
+</div>
+<div id="references" class="section level2 unnumbered">
+<h2 class="unnumbered">References</h2>
+<div id="refs" class="references hanging-indent">
+<div id="ref-conceicao_2000b">
+<p>Conceição, Pedro, and Pedro Ferreira. 2000. “The Young Person’s Guide to the Theil Index: Suggesting Intuitive Interpretations and Exploring Analytical Applications.” <em>University of Texas Inequality Project (UTIP)</em>. <a href="https://utip.gov.utexas.edu/papers.html">https://utip.gov.utexas.edu/papers.html</a>.</p>
+</div>
+<div id="ref-conceicao_2000a">
+<p>Conceição, Pedro, and James K. Galbraith. 2000. “Constructing Long and Dense Time Series of Inequality Using the Theil Index.” <em>Eastern Economic Journal</em> 26 (1): 61–74.</p>
+</div>
+<div id="ref-conceiccao_2001">
+<p>Conceição, Pedro, James K Galbraith, and Peter Bradford. 2001. “The Theil Index in Sequences of Nested and Hierarchic Grouping Structures: Implications for the Measurement of Inequality Through Time, with Data Aggregated at Different Levels of Industrial Classification.” <em>Eastern Economic Journal</em> 27 (4): 491–514.</p>
+</div>
+<div id="ref-menvielle_2019">
+<p>Menvielle, Gwenn, Kulhánová, and Johan P. Machenbach. 2019. “Assessing the Impact of a Public Health Intervention to Reduce Social Inequalities in Cancer.” In <em>Reducing Social Inequalities in Cancer: Evidence and Priorities for Research</em>, edited by Salvatore Vaccarella, Joannie Lortet-Tieulent, Rodolfo Saracci, David I. Conway, Kurt Straif, and Christopher P. Wild, 185–92. Geneva, Switzerland: WHO Press.</p>
+</div>
+<div id="ref-theil_1972">
+<p>Theil, Henry. 1972. <em>Statistical Decomposition Analysis</em>. Amsterdam, The Netherlands; London, UK: North-Holland Publishing Company.</p>
+</div>
+</div>
+</div>
+
+
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
